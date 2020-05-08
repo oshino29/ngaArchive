@@ -79,7 +79,7 @@ def makefile():
         for onefloor in totalfloor:
             if localmaxfloor < int(onefloor[0]):
                 if onefloor[0] == 0:
-                    f.write('### %s\n\n' % title)
+                    f.write('### %s\n\n(c)ludoux [GitHub Repo](https://github.com/ludoux/ngapost2md)\n\n' % title)
 
                 f.write("----\n##### %d.[%d] \<pid:%d\> %s by %s\n" %
                         (onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
@@ -162,7 +162,7 @@ def holder():
                 time.localtime(time.time())), len(totalfloor)))
     else:
         with open(('./%d/info.txt' % tid), 'w', encoding='utf-8') as f:
-            f.write('tid:%d\ntitle:%s\n' % (tid, title))
+            f.write('tid:%d\ntitle:%s\n(c)ludoux https://github.com/ludoux/ngapost2md\n==========\n' % (tid, title))
             f.write(
                 ('[%s]%d\n' % (time.asctime(time.localtime(time.time())), len(totalfloor))))
 
