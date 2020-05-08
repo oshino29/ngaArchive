@@ -16,12 +16,12 @@ cookies = {
     'ngaPassportCid': '__',
 }
 #=============先修改
-totalfloor = []  # int几层，str时间，str昵称，str内容，int赞数
+totalfloor = []  # int几层，int pid, str时间，str昵称，str内容，int赞数
 tid = 0
 title = 'title'
 localmaxpage = 1
 localmaxfloor = -1
-
+commentreply = [] # (在single里用)部分楼层有评论，content是挂在被评论楼层的，所以先放在这里，之后判断当前楼层是否是评论楼层（是的话没有content），是的话就直接读成这里 int pid，str时间，str昵称，str内容，int赞数
 
 def single(page):
     print('trypage%d' % page)
@@ -48,11 +48,28 @@ def single(page):
     global title
     title = tdict['subject']
 
+    global commentreply
     for i in range(len(replydict)):
-        totalfloor.append([int(replydict[str(i)]['lou']), replydict[str(i)]['postdate'], userdict[str(
-            replydict[str(i)]['authorid'])]['username'], replydict[str(i)]['content'], int(replydict[str(i)]['score'])])
+        one = ''
+        if 'comment' in replydict[str(i)]:#该楼层下挂有评论，先+comment，下面到正经楼层
+            for one in replydict[str(i)]['comment']:
+                commentreply.append([int(replydict[str(i)]['comment'][one]['pid']),replydict[str(i)]['comment'][one]['postdate'],userdict[str(
+                    replydict[str(i)]['comment'][one]['authorid'])]['username'], '[评论] ' + str(replydict[str(i)]['comment'][one]['content']), int(replydict[str(i)]['comment'][one]['score'])])
+            
+        
+        if 'content' in replydict[str(i)]:#正经楼层
+            commentnumtxt = ''
+            if one != '':
+                commentnumtxt = '[评论数:' + str(int(one) + 1) + ']\n\n'
+            totalfloor.append([int(replydict[str(i)]['lou']), int(replydict[str(i)]['pid']), replydict[str(i)]['postdate'], userdict[str(
+                replydict[str(i)]['authorid'])]['username'], commentnumtxt + str(replydict[str(i)]['content']), int(replydict[str(i)]['score'])])
+        else:#评论楼层，无content
+            for one in commentreply:
+                if one[0] == int(replydict[str(i)]['pid']):
+                    totalfloor.append([int(replydict[str(i)]['lou']), int(replydict[str(i)]['pid']), one[1], one[2], one[3], one[4]])
+                    commentreply.remove(one)
 
-    return tdict['lastposter'] != totalfloor[len(totalfloor)-1][2]
+    return tdict['lastposter'] != totalfloor[len(totalfloor)-1][3]
 
 
 def makefile():
@@ -64,9 +81,9 @@ def makefile():
                 if onefloor[0] == 0:
                     f.write('### %s\n\n' % title)
 
-                f.write("----\n##### %d.[%d] %s by %s\n" %
-                        (onefloor[0], onefloor[4], onefloor[1], onefloor[2]))
-                raw = str(onefloor[3])
+                f.write("----\n##### %d.[%d] \<pid:%d\> %s by %s\n" %
+                        (onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
+                raw = str(onefloor[4])
 
                 raw = raw.replace('<br/>', '\n')  # 换行
                 raw = raw.replace('<br>', '\n')
