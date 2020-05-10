@@ -69,7 +69,7 @@ def single(page):
                     totalfloor.append([int(replydict[str(i)]['lou']), int(replydict[str(i)]['pid']), one[1], one[2], one[3], one[4]])
                     commentreply.remove(one)
 
-    return tdict['lastposter'] != totalfloor[len(totalfloor)-1][3]
+    return tdict['lastposter'] != totalfloor[len(totalfloor)-1][3] and not(len(totalfloor) == 1 and totalfloor[0][0] == 0) # lastposter 对不上 “且”不是只有主楼的情况
 
 
 def makefile():
