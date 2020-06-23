@@ -10,7 +10,7 @@ import json
 
 #=============先修改
 headers = {
-    'User-agent': '__'}
+    'User-agent': 'Nga_Official/80023'}
 cookies = {
     'ngaPassportUid': '__',
     'ngaPassportCid': '__',
