@@ -329,6 +329,12 @@ def url(raw):
         raw = raw.replace('[url=%s]%s[/url]' % (ritem[0],ritem[1]), '[%s](%s)' % (ritem[1],ritem[0]))
     return raw
 
+def align(raw):
+    rex = re.findall(r'\[align=(.+?)\](.+?)\[\/align\]', raw)
+    for ritem in rex:
+        raw = raw.replace('[align=%s]%s[/align]' % (ritem[0], ritem[1]), '<div style="text-align:%s">%s</div>' % (ritem[0], ritem[1]))
+    return raw
+
 def format(raw, tid, floorindex, total, errtxt):
     global errortext
     errortext = errtxt
@@ -338,4 +344,5 @@ def format(raw, tid, floorindex, total, errtxt):
     raw = quote(raw)
     raw = strikeout(raw)
     raw = url(raw)
+    raw = align(raw)
     return raw, errortext
