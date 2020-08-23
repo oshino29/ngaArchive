@@ -299,13 +299,13 @@ def quote(raw):
     # [0]人名 [1]时间 [2]圈的内容
     # 引用 [quote][tid=0000000]Topic[/tid] [b]Post by [uid=000000]whowhowho[/uid] (2020-03-26 01:07):[/b]
     rex = re.findall(
-        r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]', raw, flags=re.S)
+        r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]', raw, flags=re.S) # TODO: 之后判断后面有无跟两个换行，若没有要补上
     for ritem in rex:
         quotetext = ritem[2]
         quotetext = quotetext.replace('\n', '\n>')
         quoteauthor = ritem[0]
         if quoteauthor[:7] == '#anony_':
-            quoteauthor = '匿' + quoteauthor[-6:] # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整
+            quoteauthor = '匿' + quoteauthor[-6:] # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整（这个应该放在大的 raw 里面处理）
         raw = raw.replace(re.search(r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]',
             raw, flags=re.S).group(), '>%s(%s) said:%s' % (quoteauthor, ritem[1], quotetext))
     
@@ -313,7 +313,7 @@ def quote(raw):
         r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\] \((.+?)\)\[\/b\]', raw, flags=re.S)
     for ritem in rex:
         raw = raw.replace(re.search(r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\] \((.+?)\)\[\/b\]',
-            raw, flags=re.S).group(), '>Reply to %s(%s):' % (ritem[0], ritem[1]))
+            raw, flags=re.S).group(), '>Reply to %s(%s):\n\n' % (ritem[0], ritem[1])) # TODO: 之后判断后面有无跟两个换行，若没有要补上
     
     return raw
 
