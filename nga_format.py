@@ -298,23 +298,25 @@ def quote(raw):
     #[quote][pid=446671245,23044506,3]Reply[/pid] [b]Post by [uid]#anony_e8992fb55425a90ff0ff409eb4981c96[/uid][color=gray](43楼)[/color] (2020-08-21 03:32):[/b]<br/><br/>被霸凌欺负过，磕过安眠药洗过胃。<br/>你问我为什么不极限一换一？<br/>家人/老师/同学都认为是你的错，<br/>你也以为是自己的错，扭曲的环境下，<br/>我只有自杀一条路可以走。[/quote]
     # [0]人名 [1]时间 [2]圈的内容
     # 引用 [quote][tid=0000000]Topic[/tid] [b]Post by [uid=000000]whowhowho[/uid] (2020-03-26 01:07):[/b]
-    rex = re.findall(
-        r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]', raw, flags=re.S) # TODO: 之后判断后面有无跟两个换行，若没有要补上
+    ro1 = re.compile(r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]((?:\n){0,2})', flags=re.S)
+    
+    rex = ro1.findall(raw)
     for ritem in rex:
         quotetext = ritem[2]
         quotetext = quotetext.replace('\n', '\n>')
         quoteauthor = ritem[0]
         if quoteauthor[:7] == '#anony_':
-            quoteauthor = '匿' + quoteauthor[-6:] # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整（这个应该放在大的 raw 里面处理）
-        raw = raw.replace(re.search(r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]',
-            raw, flags=re.S).group(), '>%s(%s) said:%s' % (quoteauthor, ritem[1], quotetext))
+            quoteauthor = '匿' + quoteauthor[-6:] # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整
+        raw = ro1.sub('>%s(%s) said:%s\n\n' % (quoteauthor, ritem[1], quotetext),raw)
+        #raw = raw.replace(re.search(r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]',
+            #raw, flags=re.S).group(), '>%s(%s) said:%s' % (quoteauthor, ritem[1], quotetext))
+
     
-    rex = re.findall(
-        r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\] \((.+?)\)\[\/b\]', raw, flags=re.S)
+    ro2 = re.compile(r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\] \((.+?)\)\[\/b\]((?:\n){0,2})', flags=re.S)
+    rex = ro2.findall(raw)
     for ritem in rex:
-        raw = raw.replace(re.search(r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\] \((.+?)\)\[\/b\]',
-            raw, flags=re.S).group(), '>Reply to %s(%s):\n\n' % (ritem[0], ritem[1])) # TODO: 之后判断后面有无跟两个换行，若没有要补上
-    
+        raw = ro2.sub('>Reply to %s(%s):\n\n' % (ritem[0], ritem[1]), raw)
+
     return raw
 
 def strikeout(raw):
@@ -338,11 +340,18 @@ def align(raw):
 def format(raw, tid, floorindex, total, errtxt):
     global errortext
     errortext = errtxt
-    raw = newline(raw)
-    raw = pic(raw, tid, floorindex, total)
-    raw = smile(raw)
-    raw = quote(raw)
-    raw = strikeout(raw)
-    raw = url(raw)
-    raw = align(raw)
-    return raw, errortext
+    try:
+        raw = newline(raw)
+        raw = pic(raw, tid, floorindex, total)
+        raw = smile(raw)
+        raw = quote(raw)
+        raw = strikeout(raw)
+        raw = url(raw)
+        raw = align(raw)
+    except Exception as e:
+        print('Error occured (@F.%d): %s' % (floorindex, e))
+        errortext = errortext + 'Error occured (@F.%d).' % floorindex
+        return raw, errortext
+    else:
+        return raw, errortext
+        

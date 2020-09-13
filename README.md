@@ -46,6 +46,11 @@
 - 表格之类的复杂排版
 - 折叠
 
+## Special Thanks
+
+特别感谢 [crella6](https://github.com/crella6) 的捉虫以及意见！
+
 ## TODO
+
 1. 匿名的显示处理一下，按 js 的逻辑走。
 2. 引用和回复判断一下后面换行够不够。
