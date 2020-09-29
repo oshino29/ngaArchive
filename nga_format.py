@@ -312,7 +312,7 @@ def quote(raw):
             #raw, flags=re.S).group(), '>%s(%s) said:%s' % (quoteauthor, ritem[1], quotetext))
 
     
-    ro2 = re.compile(r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\] \((.+?)\)\[\/b\]((?:\n){0,2})', flags=re.S)
+    ro2 = re.compile(r'\[b\]Reply to .+? Post by \[uid.*?\](.+?)\[\/uid\].+?\((.+?)\)\[\/b\]((?:\n){0,2})', flags=re.S)
     rex = ro2.findall(raw)
     for ritem in rex:
         raw = ro2.sub('>Reply to %s(%s):\n\n' % (ritem[0], ritem[1]), raw)
@@ -337,21 +337,57 @@ def align(raw):
         raw = raw.replace('[align=%s]%s[/align]' % (ritem[0], ritem[1]), '<div style="text-align:%s">%s</div>' % (ritem[0], ritem[1]))
     return raw
 
+def collapse(raw):
+    rex = re.findall(r'\[collapse(=.+?)?\](.+?)\[\/collapse\]', raw,flags= re.S)
+    rt = ''
+    for ritem in rex:
+        if ritem[0] == '':
+            rt = '<details>\n  <summary>已折叠，点击展开</summary>\n  <pre>' + ritem[0].replace('\n','<br>') + '</pre>\n</details>'
+            raw = raw.replace('[collapse]%s[/collapse]' % ritem[0], rt)
+        else:
+            rt = '<details>\n  <summary>' + ritem[0][1:] +'</summary>\n  <pre>' + ritem[1].replace('\n','<br>') + '</pre>\n</details>'
+            raw = raw.replace('[collapse%s]%s[/collapse]' % (ritem[0],ritem[1]), rt)
+    return raw
+
+def anony(raw):
+    #Special thanks to @crella6
+    anony_string1 = '甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥'
+    anony_string2 = '王李张刘陈杨黄吴赵周徐孙马朱胡林郭何高罗郑梁谢宋唐许邓冯韩曹曾彭萧蔡潘田董袁于余叶蒋杜苏魏程吕丁沈任姚卢傅钟姜崔谭廖范汪陆金石戴贾韦夏邱方侯邹熊孟秦白江阎薛尹段雷黎史龙陶贺顾毛郝龚邵万钱严赖覃洪武莫孔汤向常温康施文牛樊葛邢安齐易乔伍庞颜倪庄聂章鲁岳翟殷詹申欧耿关兰焦俞左柳甘祝包宁尚符舒阮柯纪梅童凌毕单季裴霍涂成苗谷盛曲翁冉骆蓝路游辛靳管柴蒙鲍华喻祁蒲房滕屈饶解牟艾尤阳时穆农司卓古吉缪简车项连芦麦褚娄窦戚岑景党宫费卜冷晏席卫米柏宗瞿桂全佟应臧闵苟邬边卞姬师和仇栾隋商刁沙荣巫寇桑郎甄丛仲虞敖巩明佘池查麻苑迟邝'
+    rex = re.findall(r'#anony_.{32}', raw)
+    for ritem in rex:
+        res = ''
+        str16 = '0x0' + ritem[7]
+        res += anony_string1[int(str16, 16)]
+        str16 = '0x' + ritem[8:10]
+        res += anony_string2[int(str16, 16)]
+        str16 = '0x' + ritem[10:12]
+        res += anony_string2[int(str16, 16)]
+        str16 = '0x0' + ritem[13]
+        res += anony_string1[int(str16, 16)]
+        str16 = '0x' + ritem[14:16]
+        res += anony_string2[int(str16, 16)]
+        str16 = '0x' + ritem[16:18]
+        res += anony_string2[int(str16, 16)]
+        res += '?'
+        raw = raw.replace(ritem, res)
+    return raw
+
 def format(raw, tid, floorindex, total, errtxt):
     global errortext
     errortext = errtxt
     try:
         raw = newline(raw)
+        raw = anony(raw)
         raw = pic(raw, tid, floorindex, total)
         raw = smile(raw)
         raw = quote(raw)
         raw = strikeout(raw)
         raw = url(raw)
         raw = align(raw)
+        raw = collapse(raw)
     except Exception as e:
         print('Error occured (@F.%d): %s' % (floorindex, e))
         errortext = errortext + 'Error occured (@F.%d).' % floorindex
         return raw, errortext
     else:
         return raw, errortext
-        

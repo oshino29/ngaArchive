@@ -41,13 +41,14 @@ def single(page):
     content = get.text.replace('	', '')  # 过滤掉防止json解析出错
 
     usertext = re.search(r',"__U":(.+?),"__R":', content, flags=re.S).group(1)
-    userdict = json.loads(usertext, strict=False)
+    usertext = nga_format.anony(usertext) # 这里处理一次，然后在回复内容的时候会调用nga_format.format对内容中的用户名引用会处理
+    userdict = json.loads(usertext, strict=False) # 牵涉到的用户信息
 
     replytext = re.search(r',"__R":(.+?),"__T":', content, flags=re.S).group(1)
-    replydict = json.loads(replytext, strict=False)
+    replydict = json.loads(replytext, strict=False) # 具体的回复楼
 
     ttext = re.search(r',"__T":(.+?),"__F":', content, flags=re.S).group(1)
-    tdict = json.loads(ttext, strict=False)
+    tdict = json.loads(ttext, strict=False) # 帖子的一些数据
 
     global title
     title = tdict['subject']
@@ -93,7 +94,7 @@ def makefile():
                         (onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
                 raw = str(onefloor[4])
 
-                rt = nga_format.format(raw,tid,onefloor[0],total,errortext)
+                rt = nga_format.format(raw,tid,onefloor[0],total,errortext)#format的是每一层的
                 raw = rt[0]
                 errortext = rt[1]
                 
