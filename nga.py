@@ -17,7 +17,7 @@ cookies = {
 }
 
 
-totalfloor = []  # int几层，int pid, str时间，str昵称，str内容，int赞数
+totalfloor = []  # [0]int几层，[1]int pid,  [2]str时间，[3]str昵称，[4]str内容，[5]int赞数
 tid = 0
 title = 'title'
 localmaxpage = 1
@@ -90,8 +90,8 @@ def makefile():
                     f.write(
                         '### %s\n\n(c) ludoux [GitHub Repo](https://github.com/ludoux/ngapost2md)\n\n' % title)
 
-                f.write('----\n##### %d.[%d] \<pid:%d\> %s by %s\n' %
-                        (onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
+                f.write('----\n##### <span id="pid%d">%d.[%d] \<pid:%d\> %s by %s</span>\n' %
+                        (onefloor[1], onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
                 raw = str(onefloor[4])
 
                 rt = nga_format.format(raw,tid,onefloor[0],total,errortext)#format的是每一层的
