@@ -83,6 +83,7 @@ def makefile():
     global errortext
     lastfloor = 0
     total = totalfloor[len(totalfloor)-1][0]
+    formattedfloor = {}#为https://github.com/ludoux/ngapost2md/issues/12 而增加，存储每一层format后的纯文本，采用的是 pid-format文本的字典映射
     with open(('./%d/post.md' % tid), 'a', encoding='utf-8') as f:
         for onefloor in totalfloor:
             if localmaxfloor < int(onefloor[0]):
@@ -97,6 +98,13 @@ def makefile():
                 rt = nga_format.format(raw,tid,onefloor[0],total,errortext)#format的是每一层的
                 raw = rt[0]
                 errortext = rt[1]
+                appendpid = rt[2]
+                formattedfloor[onefloor[1]] = raw
+                for it in appendpid:
+                    if it in formattedfloor:
+                        raw = raw + '\n\n\n--appendpid:' + str(it) + '--\n>' + str(formattedfloor[it]).replace('\n','\n> ') + '\n\n--end--\n'
+                    else:
+                        raw = raw + '\n\n\n--appendpid:' + str(it) + '--\n>' + '此 pid 未在本次联网获取中拿到，请全新下载本帖子。' + '\n\n--end--\n'#出现在这个reply的pid不在本次获取的内容（比如已经写到了文本里面）
                 
                 f.write(('%s\n\n' % raw))
                 lastfloor = int(onefloor[0])

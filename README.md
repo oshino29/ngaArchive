@@ -35,7 +35,7 @@
 - newline 换行
 - pic 图片（会下载下来）
 - smile 表情（只是引用在线资源）
-- quote 回复与引用
+- quote 回复与引用（阔以 jump 和 append 在最后 [#12](https://github.com/ludoux/ngapost2md/issues/12)）
 - strikeout 删除线
 - url 超链接
 - align 对齐
