@@ -428,7 +428,7 @@ def audio(raw, tid, floorindex, total):
             print('down audio:./%d/%s Floor[%d/%d]' %
                   (tid, filename, floorindex, total))
         raw = raw.replace(('[flash=audio]%s[/flash]' %
-                           ori), ('<存在一音频: %s , %s>' % (filename, dura)))
+                           ori), ('<存在一音频: %s , %s>' % (str(floorindex) + '_' + filename, dura)))
     return raw
 
 
