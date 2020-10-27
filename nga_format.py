@@ -4,6 +4,7 @@ import requests
 import os
 import sys
 import hashlib
+import time
 from contextlib import closing
 
 smile_ac = {
@@ -229,20 +230,23 @@ smile_pg = {
 }
 
 errortext = ''
-appendpid = []#里面是int
+appendpid = []  # 里面是int
 
-def util_down(url, path):
+
+def util_down(url, path, filename, prestr=''):
+    time.sleep(0.5)
     global errortext
+    fullpath = path + '/' + prestr + filename
     try:
         with closing(requests.get(url, stream=True)) as response:
             chunk_size = 1024  # 单次请求最大值
-            with open(path, 'wb') as file:
+            with open(fullpath, 'wb') as file:
                 for data in response.iter_content(chunk_size=chunk_size):
                     file.write(data)
     except Exception as e:
-        print('Failed to down url:%s, path:%s:%s' % (url, path, e))
+        print('Failed to down url:%s, path:%s:%s' % (url, fullpath, e))
         errortext = errortext + \
-            '<Failed to down url:%s, path:%s>' % (url, path)
+            '<Failed to down url:%s, path:%s>' % (url, fullpath)
 
 
 def smile(raw):
@@ -288,54 +292,64 @@ def pic(raw, tid, floorindex, total):
         filename = hashlib.md5(
             bytes(url, encoding='utf-8')).hexdigest()[2:8] + url[-6:]
         if os.path.exists('./%d/%s' % (tid, filename)) == False:
-            util_down(url, ('./%d/%s' % (tid, filename)))
-            print('down:./%d/%s Floor[%d/%d]' %
-                    (tid, filename, floorindex, total))
+            util_down(url, ('./%d' % tid), filename, str(floorindex) + '_')
+            print('down pic:./%d/%s Floor[%d/%d]' %
+                  (tid, filename, floorindex, total))
         raw = raw.replace(('[img]%s[/img]' %
-                ritem), ('![img](./%s)' % filename))
+                           ritem), ('![img](./%s)' % filename))
     return raw
+
 
 def quote(raw):
     global appendpid
-    #[quote][pid=446671245,23044506,3]Reply[/pid] [b]Post by [uid]#anony_e8992fb55425a90ff0ff409eb4981c96[/uid][color=gray](43楼)[/color] (2020-08-21 03:32):[/b]<br/><br/>被霸凌欺负过，磕过安眠药洗过胃。<br/>你问我为什么不极限一换一？<br/>家人/老师/同学都认为是你的错，<br/>你也以为是自己的错，扭曲的环境下，<br/>我只有自杀一条路可以走。[/quote]
+    # [quote][pid=446671245,23044506,3]Reply[/pid] [b]Post by [uid]#anony_e8992fb55425a90ff0ff409eb4981c96[/uid][color=gray](43楼)[/color] (2020-08-21 03:32):[/b]<br/><br/>被霸凌欺负过，磕过安眠药洗过胃。<br/>你问我为什么不极限一换一？<br/>家人/老师/同学都认为是你的错，<br/>你也以为是自己的错，扭曲的环境下，<br/>我只有自杀一条路可以走。[/quote]
     # [0]人名 [1]时间 [2]圈的内容
     # 引用 [quote][tid=0000000]Topic[/tid] [b]Post by [uid=000000]whowhowho[/uid] (2020-03-26 01:07):[/b]
-    ro0 = re.compile(r'\[quote\]\[tid=.+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]((?:\n){0,2})', flags=re.S)#这个是圈主帖的
+    ro0 = re.compile(
+        r'\[quote\]\[tid=.+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]((?:\n){0,2})', flags=re.S)  # 这个是圈主帖的
     rex = ro0.findall(raw)
     for ritem in rex:
         quotetext = ritem[2]
         quotetext = quotetext.replace('\n', '\n>')
         quoteauthor = ritem[0]
         if quoteauthor[:7] == '#anony_':
-            quoteauthor = '匿' + quoteauthor[-6:] # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整
-        raw = ro0.sub('>[jump](#pid0) %s(%s) said:%s\n\n' % (quoteauthor, ritem[1], quotetext),raw)
-    
-    ro1 = re.compile(r'\[quote\]\[pid=(\d+?),.+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]((?:\n){0,2})', flags=re.S)
-    #[0]pid [1]原作者 [2]时间 [3]说的东西
+            # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整
+            quoteauthor = '匿' + quoteauthor[-6:]
+        raw = ro0.sub('>[jump](#pid0) %s(%s) said:%s\n\n' %
+                      (quoteauthor, ritem[1], quotetext), raw)
+
+    ro1 = re.compile(
+        r'\[quote\]\[pid=(\d+?),.+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]((?:\n){0,2})', flags=re.S)
+    # [0]pid [1]原作者 [2]时间 [3]说的东西
     rex = ro1.findall(raw)
     for ritem in rex:
         quotetext = ritem[3]
         quotetext = quotetext.replace('\n', '\n>')
         quoteauthor = ritem[1]
-        #appendpid.append(int(ritem[0])) #这里会有原文的，就不append了
+        # appendpid.append(int(ritem[0])) #这里会有原文的，就不append了
         if quoteauthor[:7] == '#anony_':
-            quoteauthor = '匿' + quoteauthor[-6:] # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整
-        raw = ro1.sub('>[jump](#pid%s) %s(%s) said:%s\n\n' % (ritem[0], quoteauthor, ritem[2], quotetext),raw)
-        #raw = raw.replace(re.search(r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]',
-            #raw, flags=re.S).group(), '>%s(%s) said:%s' % (quoteauthor, ritem[1], quotetext))
+            # TODO: https://img4.nga.178.com/common_res/js_commonui.js commonui.anonyName 之后再整
+            quoteauthor = '匿' + quoteauthor[-6:]
+        raw = ro1.sub('>[jump](#pid%s) %s(%s) said:%s\n\n' %
+                      (ritem[0], quoteauthor, ritem[2], quotetext), raw)
+        # raw = raw.replace(re.search(r'\[quote\].+?\[uid.*?\](.+?)\[/uid\].*?\((\d{4}.+?)\):\[/b\](.+?)\[/quote\]',
+        # raw, flags=re.S).group(), '>%s(%s) said:%s' % (quoteauthor, ritem[1], quotetext))
 
-    
-    ro2 = re.compile(r'\[b\]Reply to \[pid=(\d+?),.+? Post by \[uid.*?\](.+?)\[\/uid\].+?\((.+?)\)\[\/b\]((?:\n){0,2})', flags=re.S)
-    #[0]pid [1]原作者 [2]时间
+    ro2 = re.compile(
+        r'\[b\]Reply to \[pid=(\d+?),.+? Post by \[uid.*?\](.+?)\[\/uid\].+?\((.+?)\)\[\/b\]((?:\n){0,2})', flags=re.S)
+    # [0]pid [1]原作者 [2]时间
     rex = ro2.findall(raw)
     for ritem in rex:
         appendpid.append(int(ritem[0]))
-        raw = ro2.sub('>[jump](#pid%s) Reply to %s(%s):\n\n' % (ritem[0], ritem[1], ritem[2]), raw)
+        raw = ro2.sub('>[jump](#pid%s) Reply to %s(%s):\n\n' %
+                      (ritem[0], ritem[1], ritem[2]), raw)
 
     return raw
 
+
 def strikeout(raw):
     return raw.replace('[del]', '~~').replace('[/del]', '~~')
+
 
 def url(raw):
     rex = re.findall(r'\[url\](.+?)\[\/url\]', raw)
@@ -343,29 +357,39 @@ def url(raw):
         raw = raw.replace('[url]%s[/url]' % ritem, '[url](%s)' % ritem)
     rex = re.findall(r'\[url=(.+?)\](.+?)\[\/url\]', raw)
     for ritem in rex:
-        raw = raw.replace('[url=%s]%s[/url]' % (ritem[0],ritem[1]), '[%s](%s)' % (ritem[1],ritem[0]))
+        raw = raw.replace('[url=%s]%s[/url]' % (ritem[0],
+                                                ritem[1]), '[%s](%s)' % (ritem[1], ritem[0]))
     return raw
+
 
 def align(raw):
     rex = re.findall(r'\[align=(.+?)\](.+?)\[\/align\]', raw)
     for ritem in rex:
-        raw = raw.replace('[align=%s]%s[/align]' % (ritem[0], ritem[1]), '<div style="text-align:%s">%s</div>' % (ritem[0], ritem[1]))
+        raw = raw.replace('[align=%s]%s[/align]' % (ritem[0], ritem[1]),
+                          '<div style="text-align:%s">%s</div>' % (ritem[0], ritem[1]))
     return raw
 
+
 def collapse(raw):
-    rex = re.findall(r'\[collapse(=.+?)?\](.+?)\[\/collapse\]', raw,flags= re.S)
+    rex = re.findall(
+        r'\[collapse(=.+?)?\](.+?)\[\/collapse\]', raw, flags=re.S)
     rt = ''
     for ritem in rex:
         if ritem[0] == '':
-            rt = '<details>\n  <summary>已折叠，点击展开</summary>\n  <pre>' + ritem[0].replace('\n','<br>') + '</pre>\n</details>'
+            rt = '<details>\n  <summary>已折叠，点击展开</summary>\n  <pre>' + \
+                ritem[0].replace('\n', '<br>') + '</pre>\n</details>'
             raw = raw.replace('[collapse]%s[/collapse]' % ritem[0], rt)
         else:
-            rt = '<details>\n  <summary>' + ritem[0][1:] +'</summary>\n  <pre>' + ritem[1].replace('\n','<br>') + '</pre>\n</details>'
-            raw = raw.replace('[collapse%s]%s[/collapse]' % (ritem[0],ritem[1]), rt)
+            rt = '<details>\n  <summary>' + \
+                ritem[0][1:] + '</summary>\n  <pre>' + \
+                ritem[1].replace('\n', '<br>') + '</pre>\n</details>'
+            raw = raw.replace('[collapse%s]%s[/collapse]' %
+                              (ritem[0], ritem[1]), rt)
     return raw
 
+
 def anony(raw):
-    #Special thanks to @crella6
+    # Special thanks to @crella6
     anony_string1 = '甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥'
     anony_string2 = '王李张刘陈杨黄吴赵周徐孙马朱胡林郭何高罗郑梁谢宋唐许邓冯韩曹曾彭萧蔡潘田董袁于余叶蒋杜苏魏程吕丁沈任姚卢傅钟姜崔谭廖范汪陆金石戴贾韦夏邱方侯邹熊孟秦白江阎薛尹段雷黎史龙陶贺顾毛郝龚邵万钱严赖覃洪武莫孔汤向常温康施文牛樊葛邢安齐易乔伍庞颜倪庄聂章鲁岳翟殷詹申欧耿关兰焦俞左柳甘祝包宁尚符舒阮柯纪梅童凌毕单季裴霍涂成苗谷盛曲翁冉骆蓝路游辛靳管柴蒙鲍华喻祁蒲房滕屈饶解牟艾尤阳时穆农司卓古吉缪简车项连芦麦褚娄窦戚岑景党宫费卜冷晏席卫米柏宗瞿桂全佟应臧闵苟邬边卞姬师和仇栾隋商刁沙荣巫寇桑郎甄丛仲虞敖巩明佘池查麻苑迟邝'
     rex = re.findall(r'#anony_.{32}', raw)
@@ -387,15 +411,37 @@ def anony(raw):
         raw = raw.replace(ritem, res)
     return raw
 
+
+def audio(raw, tid, floorindex, total):
+    rex = re.findall(r'(?<=\[flash=audio\]).+?(?=\[/flash\])', raw)
+    for ritem in rex:
+        dura = ritem[ritem.find('?duration=')+10:]
+        ori = ritem
+        ritem = ritem[:ritem.find('?duration=')]
+        url = str(ritem)
+        if url[0:2] == './':
+            url = 'https://img.nga.178.com/attachments/' + url[2:]
+        filename = hashlib.md5(
+            bytes(url, encoding='utf-8')).hexdigest()[2:8] + url[-6:]
+        if os.path.exists('./%d/%s' % (tid, filename)) == False:
+            util_down(url, ('./%d' % tid), filename, str(floorindex) + '_')
+            print('down audio:./%d/%s Floor[%d/%d]' %
+                  (tid, filename, floorindex, total))
+        raw = raw.replace(('[flash=audio]%s[/flash]' %
+                           ori), ('<存在一音频: %s , %s>' % (filename, dura)))
+    return raw
+
+
 def format(raw, tid, floorindex, total, errtxt):
     global errortext
-    global appendpid#需要主程序追加在后面的pid的正文，这个在quote里面修改（里面都是int
+    global appendpid  # 需要主程序追加在后面的pid的正文，这个在quote里面修改（里面都是int
     errortext = errtxt
     appendpid.clear()
     try:
         raw = newline(raw)
         raw = anony(raw)
         raw = pic(raw, tid, floorindex, total)
+        raw = audio(raw, tid, floorindex, total)
         raw = smile(raw)
         raw = quote(raw)
         raw = strikeout(raw)

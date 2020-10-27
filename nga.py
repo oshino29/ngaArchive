@@ -41,14 +41,15 @@ def single(page):
     content = get.text.replace('	', '')  # 过滤掉防止json解析出错
 
     usertext = re.search(r',"__U":(.+?),"__R":', content, flags=re.S).group(1)
-    usertext = nga_format.anony(usertext) # 这里处理一次，然后在回复内容的时候会调用nga_format.format对内容中的用户名引用会处理
-    userdict = json.loads(usertext, strict=False) # 牵涉到的用户信息
+    # 这里处理一次，然后在回复内容的时候会调用nga_format.format对内容中的用户名引用会处理
+    usertext = nga_format.anony(usertext)
+    userdict = json.loads(usertext, strict=False)  # 牵涉到的用户信息
 
     replytext = re.search(r',"__R":(.+?),"__T":', content, flags=re.S).group(1)
-    replydict = json.loads(replytext, strict=False) # 具体的回复楼
+    replydict = json.loads(replytext, strict=False)  # 具体的回复楼
 
     ttext = re.search(r',"__T":(.+?),"__F":', content, flags=re.S).group(1)
-    tdict = json.loads(ttext, strict=False) # 帖子的一些数据
+    tdict = json.loads(ttext, strict=False)  # 帖子的一些数据
 
     global title
     title = tdict['subject']
@@ -83,7 +84,8 @@ def makefile():
     global errortext
     lastfloor = 0
     total = totalfloor[len(totalfloor)-1][0]
-    formattedfloor = {}#为https://github.com/ludoux/ngapost2md/issues/12 而增加，存储每一层format后的纯文本，采用的是 pid-format文本的字典映射
+    # 为https://github.com/ludoux/ngapost2md/issues/12 而增加，存储每一层format后的纯文本，采用的是 pid-format文本的字典映射
+    formattedfloor = {}
     with open(('./%d/post.md' % tid), 'a', encoding='utf-8') as f:
         for onefloor in totalfloor:
             if localmaxfloor < int(onefloor[0]):
@@ -95,20 +97,28 @@ def makefile():
                         (onefloor[1], onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
                 raw = str(onefloor[4])
 
-                rt = nga_format.format(raw,tid,onefloor[0],total,errortext)#format的是每一层的
+                rt = nga_format.format(
+                    raw, tid, onefloor[0], total, errortext)  # format的是每一层的
                 raw = rt[0]
                 errortext = rt[1]
                 appendpid = rt[2]
                 formattedfloor[onefloor[1]] = raw
                 for it in appendpid:
                     if it in formattedfloor:
-                        raw = raw + '\n\n\n--appendpid:' + str(it) + '--\n>' + str(formattedfloor[it]).replace('\n','\n> ') + '\n\n--end--\n'
+                        raw = raw + '\n\n\n--appendpid:' + \
+                            str(it) + '--\n>' + \
+                            str(formattedfloor[it]).replace(
+                                '\n', '\n> ') + '\n\n--end--\n'
                     else:
-                        raw = raw + '\n\n\n--appendpid:' + str(it) + '--\n>' + '此 pid 未在本次联网获取中拿到，请全新下载本帖子。' + '\n\n--end--\n'#出现在这个reply的pid不在本次获取的内容（比如已经写到了文本里面）
-                
+                        # 出现在这个reply的pid不在本次获取的内容（比如已经写到了文本里面）
+                        raw = raw + '\n\n\n--appendpid:' + \
+                            str(it) + '--\n>' + \
+                            '此 pid 未在本次联网获取中拿到，请全新下载本帖子。' + '\n\n--end--\n'
+
                 f.write(('%s\n\n' % raw))
                 lastfloor = int(onefloor[0])
     return lastfloor
+
 
 def main():
     global tid

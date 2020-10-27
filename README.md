@@ -39,18 +39,15 @@
 - strikeout 删除线
 - url 超链接
 - align 对齐
+- collapse 折叠 （[#10](https://github.com/ludoux/ngapost2md/issues/10)）
+- anony 匿名 （[#11](https://github.com/ludoux/ngapost2md/issues/11)）
+- audio 音频 （[#15](https://github.com/ludoux/ngapost2md/issues/15)）
 
 不资瓷并且常出现的有：
 
 - 字体颜色啊大小之类的格式
 - 表格之类的复杂排版
-- 折叠
 
 ## Special Thanks
 
 特别感谢 [crella6](https://github.com/crella6) 的捉虫以及意见！
-
-## TODO
-
-1. 匿名的显示处理一下，按 js 的逻辑走。
-2. 引用和回复判断一下后面换行够不够。
