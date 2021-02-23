@@ -289,7 +289,7 @@ def pic(raw, tid, floorindex, total):
         if url[0:2] == './':
             url = 'https://img.nga.178.com/attachments/' + url[2:]
         url = url.replace('.medium.jpg', '')
-        filename = str(floorindex) + '_' + hashlib.md5(
+        filename = hashlib.md5(
             bytes(url, encoding='utf-8')).hexdigest()[2:8] + url[-6:]
         if os.path.exists('./%d/%s' % (tid, filename)) == False:
             util_down(url, ('./%d' % tid), filename, '')

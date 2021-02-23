@@ -39,7 +39,9 @@ def single(page):
                   params=params, cookies=cookies)
     get.encoding = 'GBK'
     content = get.text.replace('	', '')  # 过滤掉防止json解析出错
-
+    if "服务器忙" in content:
+        print("服务器忙")
+        return False
     usertext = re.search(r',"__U":(.+?),"__R":', content, flags=re.S).group(1)
     # 这里处理一次，然后在回复内容的时候会调用nga_format.format对内容中的用户名引用会处理
     usertext = nga_format.anony(usertext)
