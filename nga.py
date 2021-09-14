@@ -12,8 +12,8 @@ import nga_format
 headers = {
     'User-agent': 'Nga_Official/80023'}
 cookies = {
-    'ngaPassportUid': '__',
-    'ngaPassportCid': '__',
+    'ngaPassportUid': '60246374',
+    'ngaPassportCid': 'X91nnit70dsvtb64gma19jgilb3s3rgcoe6fuvli',
 }
 
 
